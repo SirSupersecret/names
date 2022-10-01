@@ -10,6 +10,7 @@ describe("Names", function () {
       const names = await Names.deploy();
 
       //expect().to.equal(true);
+      // test claim function, everything else can be expected to work
     });
   });
 });

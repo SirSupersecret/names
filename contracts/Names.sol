@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-// import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -21,12 +20,11 @@ contract Names is Ownable {
 
     IOutsider outsider = IOutsider(0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81);
 
-    function proofClaim(string memory _handle, bytes memory _sig) external payable {
-        // outsider.proofEOA(msg.sender, _sig);
-        this.claim{value: msg.value}(_handle);
-    }
+    function claim(string memory _handle, bytes memory _sig) external payable {
+        if(_sig.length != 0) {
+            // outsider.proofEOA(msg.sender, _sig);
+        }
 
-    function claim(string memory _handle) external payable {
         if(bytes(resolveAddress[msg.sender]).length != 0) {
             require(msg.value == renameFee, "Wrong value...");
         }

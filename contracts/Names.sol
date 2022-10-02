@@ -11,7 +11,7 @@ abstract contract IOutsider {
 }
 
 contract Names is Ownable {
-    event nameClaimed(address indexed _claimer, string _name);
+    event NameClaimed(address indexed _claimer, string _name);
 
     mapping(address => string) public resolveAddress;
     mapping(string => address) public resolveName;

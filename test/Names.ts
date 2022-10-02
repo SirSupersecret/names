@@ -29,7 +29,7 @@ describe("Names", function () {
       
       // test name overwriting
       await expect(names.claim("SecondTest", [])).to.be.reverted;
-      expect(await names.claim("ThirdTest", [], {value: ethers.utils.parseEther("5")}));
+      expect(await names.claim("ThirdTest", [], {value: ethers.utils.parseEther("5")})).to.emit(names, "NameClaimed");
       
       expect(await names.resolveAddress(owner.address)).to.equal("ThirdTest/0");
 
@@ -48,6 +48,32 @@ describe("Names", function () {
 
       // test other signer on already claimed name
       expect(await names.connect(other).claim("FirstTest", [])).to.emit(names, "NameClaimed").withArgs(other.address, "FirstTest/2");
+    });
+
+    it("Should allow fee change and withdrawal", async function () {
+      const [owner] = await ethers.getSigners();
+
+      const Names = await ethers.getContractFactory("Names");
+      const names = await Names.deploy();
+      
+      // overwrite names a few times
+      expect(await names.claim("FirstTest", [])).to.emit(names, "NameClaimed");
+      expect(await names.claim("ThirdTest", [], {value: ethers.utils.parseEther("5")})).to.emit(names, "NameClaimed");
+      expect(await names.claim("ThirdTest", [], {value: ethers.utils.parseEther("5")})).to.emit(names, "NameClaimed");
+
+      // test claimFee change
+      expect(await names.setFee(ethers.utils.parseEther("10")));
+      await expect(names.claim("ThirdTest", [], {value: ethers.utils.parseEther("5")})).to.be.reverted;
+      expect(await names.claim("SecondTest", [], {value: ethers.utils.parseEther("10")})).to.emit(names, "NameClaimed");
+      
+      expect(await names.resolveAddress(owner.address)).to.equal("SecondTest/0");
+
+      // test withdrawFee
+      const oldBalance = parseInt(ethers.utils.formatEther(await owner.getBalance()));
+      expect(await names.withdrawFee());
+      const newBalance = parseInt(ethers.utils.formatEther(await owner.getBalance()));
+
+      expect(newBalance).to.equal(oldBalance + 20);
     });
   });
 });

@@ -22,17 +22,16 @@ contract Names is Ownable {
     IOutsider outsider = IOutsider(0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81);
 
     function claim(string memory _handle, bytes memory _sig) external payable {
-        outsider.proofEOA(msg.sender, _sig);
+        // outsider.proofEOA(msg.sender, _sig);
         this.claim{value: msg.value}(_handle);
     }
 
     function claim(string memory _handle) external payable {
-        if(keccak256(abi.encodePacked(resolveAddress[msg.sender])) != keccak256(abi.encodePacked(""))) {
+        if(bytes(resolveAddress[msg.sender]).length != 0) {
             require(msg.value == renameFee, "Wrong value...");
-            payable(owner()).transfer(msg.value);
         }
 
-        require(outsider.isEOA(msg.sender));
+        // require(outsider.isEOA(msg.sender));
 
         string memory name = string.concat(_handle, "/", Strings.toString(handleCount[_handle]));
 
@@ -46,5 +45,9 @@ contract Names is Ownable {
 
     function setFee(uint256 _value) external onlyOwner() {
         renameFee = _value;
+    }
+
+    function withdrawFee() external onlyOwner() {
+        payable(owner()).transfer(address(this).balance);
     }
 }

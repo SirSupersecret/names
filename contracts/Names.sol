@@ -22,14 +22,14 @@ contract Names is Ownable {
 
     function claim(string memory _handle, bytes memory _sig) external payable {
         if(_sig.length != 0) {
-            // outsider.proofEOA(msg.sender, _sig);
+            outsider.proofEOA(msg.sender, _sig);
         }
 
         if(bytes(resolveAddress[msg.sender]).length != 0) {
             require(msg.value == renameFee, "Wrong value...");
         }
 
-        // require(outsider.isEOA(msg.sender));
+        require(outsider.isEOA(msg.sender));
 
         string memory name = string.concat(_handle, "/", Strings.toString(handleCount[_handle]));
 

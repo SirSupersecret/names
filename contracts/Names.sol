@@ -17,7 +17,7 @@ contract Names is Ownable {
     mapping(string => address) public resolveName;
     mapping(string => uint) public handleCount;
 
-    uint256 public renameFee;
+    uint256 public renameFee = 5 ether;
 
     IOutsider outsider = IOutsider(0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81);
 

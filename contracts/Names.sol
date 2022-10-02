@@ -40,7 +40,7 @@ contract Names is Ownable {
 
         handleCount[_handle] += 1;
 
-        emit nameClaimed(msg.sender, name);
+        emit NameClaimed(msg.sender, name);
     }
 
     function setFee(uint256 _value) external onlyOwner() {

@@ -1,89 +1,201 @@
+let lookupProvider;
 let provider;
+const namesABI = [
+  "function claim(string _handle, bytes _sig) external payable",
+  "function resolveAddress(address) public view returns (string)",
+  "function resolveName(string) public view returns (address)",
+  "function handleCount(string) public view returns (uint)",
+  "function renameFee() public view returns (uint)",
+  "event NameClaimed(address indexed _claimer, string _name)"
+]
+let namesContract;
+
 const outsiderABI = [
-  "function isEOA(address) view returns (bool)",
-  "function proofEOA(address _subject, bytes _sig)",
-  "event ProofOfEOA(address subject)"
+  "function isEOA(address) view returns (bool)"
 ]
 let outsiderContract;
 
 let signer;
-let sig;
 
-document.addEventListener('alpine:init', () => {
-  let initialState = "";
-  let initialProgress = 0;
+function isTag(tag) {
+  if(tag.includes(".")) return false;
+  
+  const num = Number(tag);
+  if (Number.isInteger(num) && num >= 0) return true;
+
+  return false;
+}
+
+window.onload = function() {
+  document.getElementById("search").value = "";
+  document.getElementById("choose").value = "";
+}
+
+document.addEventListener("alpine:init", () => {
+  let externalAvailable = false;
+
   try {
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    outsiderContract = new ethers.Contract("0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81", outsiderABI, provider);
+    try {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+    } catch(e) {
+      console.log(e);
+    }
+
+    try {
+      lookupProvider = ethers.getDefaultProvider("https://rpc-mumbai.maticvigil.com");
+    }catch(e){
+      console.log(e);
+    }
+    let signer = new ethers.VoidSigner("0x761772008F5eabE3B178E05a6f764A792F299B47", provider || lookupProvider);
+    
+    namesContract = new ethers.Contract("0x761772008F5eabE3B178E05a6f764A792F299B47", namesABI, signer);
+    outsiderContract = new ethers.Contract("0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81", outsiderABI, signer);
+
+    if(provider) externalAvailable = true;
   } catch (e) {
-    initialState = "unsupported";
-    initialProgress = 3;
+    console.log(e);
   }
 
   Alpine.data('interactive', () => ({
-    progress: initialProgress,
     connected: false,
-    available: provider ? true : false,
+    available: externalAvailable,
     readable: "Connect your wallet to check your EOA status.",
+    searchData: {
+      name: "------",
+      address: "------",
+      state: "unknown"
+    },
+    setData: {
+      connectionState: externalAvailable ? "unknown" : "unsupported",
+      progressState: "",
+      handleCount: "/...",
+      hasText: false,
+      currentName: "...",
+      handle: "",
+      renameFee: 5,
+      buttonText: "Set (0 Matic)"
+    },
 
-    getColor(which) {
-      console.log(which);
-      switch(which) {
-        case "connect":
-          if(this.available && !this.connected) return "unknown";
-          if(!this.available) return "unsupported";
-          if(this.connected) return "true";
-          else return "false";
-          break;
-        case "search":
-          if(true) return "unknown";
-          break;
+    lookupHint(data) {
+      if(!data) {
+        this.searchData = {
+          name: "------",
+          address: "------",
+          state: "unknown"
+        }
+      } else {
+        this.searchData.state = "pending";
       }
     },
 
-    setStates(newVal) {
-      return;
-      this.state = newVal;
-
-
-      switch(newVal) {
-        case "true":
-          this.readable = "This account is registered as an EOA.";
-          break;
-        case "false":
-          this.readable = "This account is not registered as an EOA";
-          break;
-        case "unsupported":
-          this.readable = "Outsider does not yet support this chain.";
-          break;
-        case "waiting":
-          this.readable = "Your request is currently being processed."
-          break;
+    async lookup(data) {
+      if(!data) {
+        // display empty
+        this.searchData = {
+          name: "------",
+          address: "------",
+          state: "unknown"
+        };
+        return;
       }
+      if(ethers.utils.isAddress(data)) {
+        // resolve Address
+        this.searchData = {
+          address: data,
+          name: "...",
+          state: "pending"
+        }
+
+        const result = await namesContract.resolveAddress(data);
+
+        if(result) {
+          this.searchData = {
+            name: result,
+            address: data,
+            state: "true"
+          }
+        } else {
+          this.searchData = {
+            name: "------",
+            address: data,
+            state: "false"
+          }
+        }
+      } else {
+        // resolve Name
+        if(!data.includes("/")) data += "/0";
+        if(data.slice(-1) == "/") data += "0";
+
+        let tag = /[^/]*$/.exec(data)[0];
+        if(!isTag(tag)) data += "/0";
+
+        this.searchData = {
+          name: data,
+          address: "...",
+          state: "pending"
+        }
+
+        let result = await namesContract.resolveName(data);
+
+        if(result == "0x0000000000000000000000000000000000000000") result = "------";
+
+        this.searchData = {
+          name: data,
+          address: result,
+          state: result == result ? "true" : "false"
+        }
+      }
+    },
+
+    previewHint(data) {
+      if(!data) {
+        this.setData.handleCount = "/...";
+        this.setData.hasText = false;
+        this.setData.progressState = "unsupported";
+        return;
+      }
+      this.setData.progressState = "pending"
+    },
+
+    async preview(data) {
+      if(!data) return;
+      const handleCount = await namesContract.handleCount(data);
+      this.setData.handleCount = "/" + handleCount;
+      this.setData.hasText = true;
+      this.setData.progressState = "unknown";
     },
 
     async connect() {
+      this.setData.connectionState = "pending";
+
       await provider.send("eth_requestAccounts", []);
       signer = await provider.getSigner();
 
-      if(signer) {
-        let isEOA;
-        try {
-          isEOA = await outsiderContract.isEOA(await signer.getAddress());
-        } catch(e) {
-          alert("Outsider is not yet deployed on this chain.");
-          this.setStates("unsupported");
-          this.progress = 3;
-          return;
-        }
+      const { chainId } = await provider.getNetwork();
 
-        if(isEOA) {
-          this.setStates("true");
-          this.progress = 2;
-        } else {
-          this.setStates("false");
-          this.progress = 1;
-        }
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x13881" }]
+        });
+      } catch(e) {
+        this.setData.connectionState = "false";
+        return;
+      }
+      
+      if(signer) {
+        namesContract = namesContract.connect(signer);
+        outsiderContract = outsiderContract.connect(signer);
+
+        const name = await namesContract.resolveAddress(signer.getAddress());
+
+        this.setData.renameFee = ethers.utils.formatEther(await namesContract.renameFee());
+
+        this.setData.connectionState = "true";
+        this.setData.progressState = "unsupported";
+        this.setData.currentName = name || "------";
+        this.connected = true;
+        this.setData.buttonText = name ? `Change (${this.setData.renameFee} Matic)` : "Set (0 Matic)";
       }
     },
 
@@ -96,26 +208,49 @@ document.addEventListener('alpine:init', () => {
           )
         )
       );
-
-      if(sig) {
-        this.progress = 2;
-      }
     },
 
-    async submit() {
-      const outsiderWithSigner = outsiderContract.connect(signer);
-      this.progress = 3;
+    async claim() {
+      this.setData.progressState = "pending";
+
+      // handle EOA check
+      const eoaPassed = await outsiderContract.isEOA(await signer.getAddress());
+
+      let sig = [];
       try {
-        const tx = await outsiderWithSigner.proofEOA(await signer.getAddress(), sig);
-        console.log(tx.hash)
-        this.setStates("waiting");
-        const receipt = await tx.wait();
-        this.setStates("true");
-        console.log(receipt)
-      } catch (e) {
-        console.log(e)
-        this.progress = 2;
+        if(!eoaPassed) {
+          sig = await signer.signMessage(
+            ethers.utils.arrayify(
+              ethers.utils.solidityKeccak256(
+                ["string"],
+                ["I am worthy."]
+              )
+            )
+          );
+        }
+      } catch(e) {
+        this.setData.progressState = "false";
+        return;
       }
+
+      // submit tx
+      let tx;
+      try {
+        tx = await namesContract.claim(this.setData.handle, sig, {value: ethers.utils.parseEther(this.setData.renameFee)});
+      } catch(e) {
+        console.log(e);
+        this.setData.progressState = "false";
+        return;
+      }
+      console.log(tx.hash);
+      const receipt = await tx.wait();
+      
+      // display result
+      const newName = await namesContract.resolveAddress(await signer.getAddress());
+      
+      this.setData.progressState = "true";
+      this.setData.buttonText = `Change (${this.setData.renameFee} Matic)`;
+      this.setData.currentName = newName;
     }
   }))
 })

@@ -60,6 +60,7 @@ document.addEventListener("alpine:init", () => {
     connected: false,
     available: externalAvailable,
     readable: "Connect your wallet to check your EOA status.",
+    hasName: false,
     searchData: {
       name: "------",
       address: "------",
@@ -142,7 +143,7 @@ document.addEventListener("alpine:init", () => {
         this.searchData = {
           name: data,
           address: result,
-          state: result == result ? "true" : "false"
+          state: result != "------" ? "true" : "false"
         }
       }
     },
@@ -188,6 +189,7 @@ document.addEventListener("alpine:init", () => {
         outsiderContract = outsiderContract.connect(signer);
 
         const name = await namesContract.resolveAddress(signer.getAddress());
+        if(name) this.hasName = true;
 
         this.setData.renameFee = ethers.utils.formatEther(await namesContract.renameFee());
 
@@ -234,9 +236,12 @@ document.addEventListener("alpine:init", () => {
       }
 
       // submit tx
+      let value = this.setData.renameFee;
+      if(!this.hasName) value = 0;
+
       let tx;
       try {
-        tx = await namesContract.claim(this.setData.handle, sig, {value: ethers.utils.parseEther(this.setData.renameFee)});
+        tx = await namesContract.claim(this.setData.handle, sig, {value: ethers.utils.parseEther(value)});
       } catch(e) {
         console.log(e);
         this.setData.progressState = "false";

@@ -73,7 +73,7 @@ document.addEventListener("alpine:init", () => {
       hasText: false,
       currentName: "...",
       handle: "",
-      renameFee: 5,
+      renameFee: "5",
       buttonText: "Set (0 Matic)"
     },
 
@@ -237,7 +237,7 @@ document.addEventListener("alpine:init", () => {
 
       // submit tx
       let value = this.setData.renameFee;
-      if(!this.hasName) value = 0;
+      if(!this.hasName) value = "0";
 
       let tx;
       try {

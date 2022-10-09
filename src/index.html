@@ -67,7 +67,7 @@
                 <div class="handleOverflow"></div>
                 <div class="sideBySide">
                     <div x-bind:class="'status ' + setData.progressState"></div>
-                    <button @click="claim" x-bind:disabled="!connected || !setData.hasText" x-text="setData.buttonText"></button>
+                    <button @click="claim" x-bind:disabled="!connected || !setData.hasText || setData.progressState == 'pending'" x-text="setData.buttonText"></button>
                 </div>
             </div>
         </div>

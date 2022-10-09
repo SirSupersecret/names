@@ -36,22 +36,16 @@ document.addEventListener("alpine:init", () => {
 
   try {
     try {
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-    } catch(e) {
-      console.log(e);
-    }
-
-    try {
       lookupProvider = ethers.getDefaultProvider("https://rpc-mumbai.maticvigil.com");
     }catch(e){
       console.log(e);
     }
-    let signer = new ethers.VoidSigner("0x761772008F5eabE3B178E05a6f764A792F299B47", provider || lookupProvider);
+    let signer = new ethers.VoidSigner("0x761772008F5eabE3B178E05a6f764A792F299B47", lookupProvider);
     
     namesContract = new ethers.Contract("0x761772008F5eabE3B178E05a6f764A792F299B47", namesABI, signer);
     outsiderContract = new ethers.Contract("0x0a1a6f16febF97417888dbdf1CbC3b30BD0B5b81", outsiderABI, signer);
 
-    if(provider) externalAvailable = true;
+    if(window.ethereum) externalAvailable = true;
   } catch (e) {
     console.log(e);
   }
@@ -169,20 +163,36 @@ document.addEventListener("alpine:init", () => {
     async connect() {
       this.setData.connectionState = "pending";
 
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+      } catch(e) {
+        console.log(e);
+        this.setData.connectionState = "false";
+      }
+
       await provider.send("eth_requestAccounts", []);
       signer = await provider.getSigner();
 
       const { chainId } = await provider.getNetwork();
 
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x13881" }]
-        });
-      } catch(e) {
+      // if chain is not supported
+      if(chainId != 80001) {
+        try {
+          // try switching
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x13881" }]
+          });
+
+          // if successful, rerun connect()
+          this.connect();
+          return;
+        } catch(e) {}
+        // if not successful, return with error light
         this.setData.connectionState = "false";
         return;
       }
+      
       
       if(signer) {
         namesContract = namesContract.connect(signer);

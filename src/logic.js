@@ -223,49 +223,55 @@ document.addEventListener("alpine:init", () => {
     },
 
     async claim() {
-      this.setData.progressState = "pending";
-
-      // handle EOA check
-      const eoaPassed = await outsiderContract.isEOA(await signer.getAddress());
-
-      let sig = [];
       try {
-        if(!eoaPassed) {
-          sig = await signer.signMessage(
-            ethers.utils.arrayify(
-              ethers.utils.solidityKeccak256(
-                ["string"],
-                ["I am worthy."]
+        this.setData.progressState = "pending";
+
+        // handle EOA check
+        const eoaPassed = await outsiderContract.isEOA(await signer.getAddress());
+
+        let sig = [];
+        try {
+          if(!eoaPassed) {
+            sig = await signer.signMessage(
+              ethers.utils.arrayify(
+                ethers.utils.solidityKeccak256(
+                  ["string"],
+                  ["I am worthy."]
+                )
               )
-            )
-          );
+            );
+          }
+        } catch(e) {
+          this.setData.progressState = "false";
+          return;
         }
-      } catch(e) {
-        this.setData.progressState = "false";
-        return;
-      }
 
-      // submit tx
-      let value = this.setData.renameFee;
-      if(!this.hasName) value = "0";
+        // submit tx
+        let value = this.setData.renameFee;
+        if(!this.hasName) value = "0";
 
-      let tx;
-      try {
-        tx = await namesContract.claim(this.setData.handle, sig, {value: ethers.utils.parseEther(value)});
+        let tx;
+        try {
+          tx = await namesContract.claim(this.setData.handle, sig, {value: ethers.utils.parseEther(value)});
+        } catch(e) {
+          console.log(e);
+          this.setData.progressState = "false";
+          return;
+        }
+        console.log(tx.hash);
+        const receipt = await tx.wait();
+        
+        // display result
+        const newName = await namesContract.resolveAddress(await signer.getAddress());
+
+        this.setData.handle = "";
+        
+        this.setData.progressState = "true";
+        this.setData.buttonText = `Change (${this.setData.renameFee} Matic)`;
+        this.setData.currentName = newName;
       } catch(e) {
-        console.log(e);
-        this.setData.progressState = "false";
-        return;
+        alert(e.message)
       }
-      console.log(tx.hash);
-      const receipt = await tx.wait();
-      
-      // display result
-      const newName = await namesContract.resolveAddress(await signer.getAddress());
-      
-      this.setData.progressState = "true";
-      this.setData.buttonText = `Change (${this.setData.renameFee} Matic)`;
-      this.setData.currentName = newName;
     }
   }))
 })

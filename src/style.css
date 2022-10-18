@@ -183,5 +183,7 @@ button:disabled {
 }
 
 .separator {
-    height: 1rem;
+    width: min(25rem, 70%);
+    margin: 1.75rem auto;
+    border-top: 1px solid grey;
 }

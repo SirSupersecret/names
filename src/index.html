@@ -45,29 +45,37 @@
             </div>
         </div>
         <div class="separator"></div>
-        <div class="container">
-            <div x-bind:class="'status ' + setData.connectionState" class="status"></div>
-            <button @click="connect()" x-bind:disabled="connected || !available">Connect</button>
-        </div>
-        <div x-bind:class="'container ' + (connected ? '' : 'disabled')">
-            <div class="box">
-                <div class="interactiveHeading">
-                    Your Name
-                </div>
-                <div x-text="setData.currentName" class="handleOverflow">
-                </div>
-                <div class="interactiveHeading">
-                    Choose New Name
-                </div>
-                <div class="sideBySide">
-                    <input id="choose" class="inputNested" placeholder="Name..." x-model="setData.handle" x-on:input.debounce.750="preview($event.target.value)" x-on:input="previewHint($event.target.value)"/>
-                    <div x-text="setData.handleCount" class="profileNumber">
+        <div class="wrap-collapsible">
+            <input id="collapsible" class="toggle" type="checkbox">
+            <label for="collapsible" class="lbl-toggle">Claim a Name</label>
+            <div class="collapsible-content">
+                <div class="collapsible-inner">
+                    <div class="container">
+                        <div x-bind:class="'status ' + setData.connectionState" class="status"></div>
+                        <button @click="connect()" x-bind:disabled="connected || !available">Connect</button>
                     </div>
-                </div>
-                <div class="handleOverflow"></div>
-                <div class="sideBySide">
-                    <div x-bind:class="'status ' + setData.progressState"></div>
-                    <button @click="claim" x-bind:disabled="!connected || !setData.hasText || setData.progressState == 'pending'" x-text="setData.buttonText"></button>
+                    <div x-bind:class="'container ' + (connected ? '' : 'disabled')">
+                        <div class="box">
+                            <div class="interactiveHeading">
+                                Your Name
+                            </div>
+                            <div x-text="setData.currentName" class="handleOverflow">
+                            </div>
+                            <div class="interactiveHeading">
+                                Choose New Name
+                            </div>
+                            <div class="sideBySide">
+                                <input id="choose" class="inputNested" placeholder="Name..." x-model="setData.handle" x-on:input.debounce.750="preview($event.target.value)" x-on:input="previewHint($event.target.value)"/>
+                                <div x-text="setData.handleCount" class="profileNumber">
+                                </div>
+                            </div>
+                            <div class="handleOverflow"></div>
+                            <div class="sideBySide">
+                                <div x-bind:class="'status ' + setData.progressState"></div>
+                                <button @click="claim" x-bind:disabled="!connected || !setData.hasText || setData.progressState == 'pending'" x-text="setData.buttonText"></button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

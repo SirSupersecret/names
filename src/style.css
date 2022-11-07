@@ -185,6 +185,53 @@ button:disabled {
 
 .separator {
     width: min(25rem, 70%);
-    margin: 3rem auto;
+    margin: 3rem auto 0.9rem auto;
     border-top: 1px solid grey;
+}
+
+input[type='checkbox'] {
+    display: none;
+}
+
+.lbl-toggle {
+    display: block;
+    text-align: center;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    margin-bottom: 0.9rem;
+
+    cursor: pointer;
+
+    transition: all 0.25s ease-out;
+}
+
+.lbl-toggle::before {
+    content: ' ';
+    display: inline-block;
+
+    /* Triangle */
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid currentColor;
+
+    vertical-align: middle;
+    margin-right: .7rem;
+    transform: translateY(-2px);
+
+    transition: transform .2s ease-out;
+}
+
+.collapsible-content {
+    max-height: 0px;
+    overflow: hidden;
+
+    transition: max-height .25s ease-in-out;
+}
+.toggle:checked + .lbl-toggle + .collapsible-content {
+    max-height: 100vh;
+}
+.toggle:checked + .lbl-toggle::before {
+    transform: rotate(90deg) translateX(-3px);
 }

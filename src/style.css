@@ -66,8 +66,6 @@ header a {
     margin: auto;
     width: min(80%, 70rem);
     padding: 0.3rem;
-    line-height: 150%;
-    font-weight: 500;
 }
 
 h1 {

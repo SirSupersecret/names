@@ -105,6 +105,10 @@ h1 {
     padding-bottom: 0.5rem;
 }
 
+.box > div:first-child {
+    padding-top: 0.5rem;
+}
+
 .status {
     border: 1px solid black;
     border-radius: 1rem;
@@ -173,14 +177,15 @@ button:disabled {
 }
 
 .interactiveHeading {
-    padding-top: 0.5rem;
     margin-bottom: 0.2rem;
     font-weight: bold;
 }
 
-.handleOverflow {
-    overflow: scroll;
-    margin: 0 0.5rem 0.5rem 0.5rem;
+.scrollText {
+    overflow: auto;
+    overflow-y: auto;
+    padding-bottom: 0.2rem;
+    margin: 0 0.5rem 0rem 0.5rem;
 }
 
 .separator {

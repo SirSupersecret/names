@@ -212,7 +212,7 @@ input[type='checkbox'] {
     display: none;
 }
 
-#collapsible:active {
+input[type='checkbox']:active {
     background-color: transparent;
 }
 

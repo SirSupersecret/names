@@ -212,10 +212,6 @@ input[type='checkbox'] {
     display: none;
 }
 
-input[type='checkbox']:active {
-    background-color: transparent;
-}
-
 .lbl-toggle {
     display: block;
     text-align: center;

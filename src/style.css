@@ -226,6 +226,10 @@ input[type='checkbox'] {
     transition: all 0.25s ease-out;
 }
 
+.lbl-toggle:active {
+    background-color: transparent;
+}
+
 .lbl-toggle::before {
     content: ' ';
     display: inline-block;

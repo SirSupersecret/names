@@ -210,6 +210,9 @@ button:disabled {
 
 input[type='checkbox'] {
     display: none;
+}
+
+.toggle:active {
     background-color: transparent;
 }
 
@@ -225,10 +228,6 @@ input[type='checkbox'] {
     cursor: pointer;
 
     transition: all 0.25s ease-out;
-}
-
-.lbl-toggle:active {
-    background-color: transparent;
 }
 
 .lbl-toggle::before {
